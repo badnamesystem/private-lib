@@ -4684,9 +4684,9 @@ function library:init()
         end
     end)
 
-    self.keyIndicator = self.NewIndicator({title = 'Keybinds', pos = UDim2.new(0, 0, 0, 0), enabled = false})
+    self.keyIndicator = self.NewIndicator({title = 'Keybinds', pos = UDim2.new(0.1, 0, 0, 45), enabled = true})
 
-    self.targetIndicator = self.NewIndicator({title = 'Target Info', pos = UDim2.new(0, 0, 0, 350), enabled = false})
+    self.targetIndicator = self.NewIndicator({title = 'Target Info', pos = UDim2.new(0, 0, 0, 350), enabled = true})
 
     self.targetName = self.targetIndicator:AddValue({key = 'Name     :', value = 'nil'})
     self.targetDisplay = self.targetIndicator:AddValue({key = 'DName    :', value = 'nil'})
@@ -4787,10 +4787,10 @@ function library:CreateSettingsTab(menu)
     mainSection:AddToggle({text = 'Keybinds', flag = 'keybind_indicator', state = true, callback = function(bool)
         library.keyIndicator:SetEnabled(bool);
     end})
-    mainSection:AddSlider({text = 'Position X', flag = 'keybind_indicator_x', min = 0, max = 100, increment = .1, value = 0, callback = function()
+    mainSection:AddSlider({text = 'Position X', flag = 'keybind_indicator_x', min = 0, max = 100, increment = .1, value = 0.1, callback = function()
         library.keyIndicator:SetPosition(newUDim2(library.flags.keybind_indicator_x / 100, 0, library.flags.keybind_indicator_y / 100, 0));    
     end});
-    mainSection:AddSlider({text = 'Position Y', flag = 'keybind_indicator_y', min = 0, max = 100, increment = .1, value = 25, callback = function()
+    mainSection:AddSlider({text = 'Position Y', flag = 'keybind_indicator_y', min = 0, max = 100, increment = .1, value = 45, callback = function()
         library.keyIndicator:SetPosition(newUDim2(library.flags.keybind_indicator_x / 100, 0, library.flags.keybind_indicator_y / 100, 0));    
     end});
 
