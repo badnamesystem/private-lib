@@ -4686,7 +4686,7 @@ function library:init()
 
     self.keyIndicator = self.NewIndicator({title = 'Keybinds', pos = UDim2.new(0.1, 0, 0, 45), enabled = true})
 
-    self.targetIndicator = self.NewIndicator({title = 'Target Info', pos = UDim2.new(1, -15, 0, 350), enabled = true})
+    self.targetIndicator = self.NewIndicator({title = 'Target Info', pos = UDim2.new(1, -15, 0, 350), enabled = false})
 
     self.targetName = self.targetIndicator:AddValue({key = 'Name     :', value = 'nil'})
     self.targetDisplay = self.targetIndicator:AddValue({key = 'DName    :', value = 'nil'})
