@@ -4553,9 +4553,9 @@ function library:init()
 
     end
     
-    self.keyIndicator = self.NewIndicator({title = 'Keybinds', pos = newUDim2(0,35,0,455), enabled = true});
+    self.keyIndicator = self.NewIndicator({title = 'Keybinds', pos = newUDim2(0,2235,0,22455), enabled = true});
     
-    self.targetIndicator = self.NewIndicator({title = 'Target Info', pos = newUDim2(0,15,0,350), enabled = true});
+    self.targetIndicator = self.NewIndicator({title = 'Target Info', pos = newUDim2(0,1005,0,300050), enabled = true});
     self.targetName = self.targetIndicator:AddValue({key = 'Name     :', value = 'nil'})
     self.targetDisplay = self.targetIndicator:AddValue({key = 'DName    :', value = 'nil'})
     self.targetHealth = self.targetIndicator:AddValue({key = 'Health   :', value = '0'})
@@ -4660,7 +4660,7 @@ function library:CreateSettingsTab(menu)
     mainSection:AddSlider({text = 'Position X', flag = 'keybind_indicator_x', min = 0, max = 100, increment = .1, value = .5, callback = function()
         library.keyIndicator:SetPosition(newUDim2(library.flags.keybind_indicator_x / 100, 0, library.flags.keybind_indicator_y / 100, 0));    
     end});
-    mainSection:AddSlider({text = 'Position Y', flag = 'keybind_indicator_y', min = 0, max = 100, increment = .1, value = 0.25, callback = function()
+    mainSection:AddSlider({text = 'Position Y', flag = 'keybind_indicator_y', min = 0, max = 100, increment = .1, value = 25, callback = function()
         library.keyIndicator:SetPosition(newUDim2(library.flags.keybind_indicator_x / 100, 0, library.flags.keybind_indicator_y / 100, 0));    
     end});
 
