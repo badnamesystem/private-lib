@@ -20,6 +20,12 @@ local setByConfig = false
 local floor, ceil, huge, pi, clamp = math.floor, math.ceil, math.huge, math.pi, math.clamp
 local c3new, fromrgb, fromhsv = Color3.new, Color3.fromRGB, Color3.fromHSV
 local next, newInstance, newUDim2, newVector2 = next, Instance.new, UDim2.new, Vector2.new
+local isexecutorclosure = isexecutorclosure or is_synapse_function or is_sirhurt_closure or iskrnlclosure;
+local executor = (
+    syn and 'syn' or
+    getexecutorname and getexecutorname() or
+    'unknown'
+)
 
 local library = {
     windows = {};
@@ -43,9 +49,8 @@ local library = {
         ['cursor'] = 1500;
     },
     stats = {
-            ['fps'] = 0;
-            ['ping'] = 0;
-        };
+        ['fps'] = 1;
+        ['ping'] = 1;
     };
     images = {
         ['gradientp90'] = 'https://raw.githubusercontent.com/portallol/luna/main/modules/gradient90.png';
@@ -67,7 +72,7 @@ library.themes = {
     {
         name = 'Default',
         theme = {
-            ['Accent']                    = fromrgb(139,139,139);  -- average of (124+97+196)/3
+            ['Accent']                    = fromrgb(124,97,196);
             ['Background']                = fromrgb(17,17,17);
             ['Border']                    = fromrgb(0,0,0);
             ['Border 1']                  = fromrgb(47,47,47);
@@ -86,8 +91,8 @@ library.themes = {
             ['Option Border 1']           = fromrgb(47,47,47);
             ['Option Border 2']           = fromrgb(0,0,0);
             ['Option Background']         = fromrgb(35,35,35);
-            ["Risky Text"]                = fromrgb(72,72,72);    -- average of (175+21+21)/3
-            ["Risky Text Enabled"]        = fromrgb(112,112,112); -- average of (255+41+41)/3
+            ["Risky Text"]                = fromrgb(175, 21, 21);
+            ["Risky Text Enabled"]        = fromrgb(255, 41, 41);
         }
     },
     {
@@ -4553,18 +4558,143 @@ function library:init()
         })
 
     end
+    
+    -- Watermark
+    do
+        if not IonHub_User then
+            getgenv().IonHub_User = {
+                UID = 0, 
+                User = "admin"
+            }
+        end
+        self.watermark = {
+            objects = {};
+            text = {
+                {self.cheatname, true},
+                {"Private", false},
+                {self.gamename, true},
+                {'0 fps', true},
+                {'0ms', true},
+                {'00:00:00', true},
+                {'M, D, Y', true},
+            };
+            lock = 'custom';
+            position = newUDim2(0.5, 0, 0.5, 0);
+            refreshrate = 25;
+        }
+
+        function self.watermark:Update()
+            self.objects.background.Visible = library.flags.watermark_enabled
+            if library.flags.watermark_enabled then
+                local date = {os.date('%b',os.time()), os.date('%d',os.time()), os.date('%Y',os.time())}
+                local daySuffix = math.floor(date[2]%10)
+                date[2] = date[2]..(daySuffix == 1 and 'st' or daySuffix == 2 and 'nd' or daySuffix == 3 and 'rd' or 'th')
+
+                self.text[4][1] = library.stats.fps..' fps'
+                self.text[5][1] = floor(library.stats.ping)..'ms'
+                self.text[6][1] = os.date('%X', os.time())
+                self.text[7][1] = table.concat(date, ', ')
+
+                local text = {};
+                for _,v in next, self.text do
+                    if v[2] then
+                        table.insert(text, v[1]);
+                    end
+                end
+
+                self.objects.text.Text = table.concat(text,' | ')
+                self.objects.background.Size = newUDim2(0, self.objects.text.TextBounds.X + 10, 0, 17)
+
+                local size = self.objects.background.Object.Size;
+                local screensize = workspace.CurrentCamera.ViewportSize;
+
+                self.position = (
+                    self.lock == 'Top Right' and newUDim2(0, screensize.X - size.X - 15, 0, 15) or
+                    self.lock == 'Top Left' and newUDim2(0, 15, 0, 15) or
+                    self.lock == 'Bottom Right' and newUDim2(0, screensize.X - size.X - 15, 0, screensize.Y - size.Y - 15) or
+                    self.lock == 'Bottom Left' and newUDim2(0, 15, 0, screensize.Y - size.Y - 15) or
+                    self.lock == 'Top' and newUDim2(0, screensize.X / 2 - size.X / 2, 0, 15) or
+                    newUDim2(library.flags.watermark_x / 100, 0, library.flags.watermark_y / 100, 0)
+                )
+
+                self.objects.background.Position = self.position
+            end
+        end
+
+        do
+            local objs = self.watermark.objects;
+            local z = self.zindexOrder.watermark;
+            
+            objs.background = utility:Draw('Square', {
+                Visible = true;
+                Size = newUDim2(0, 200, 0, 17);
+                Position = newUDim2(0,800,0,100);
+                ThemeColor = 'Background';
+                ZIndex = z;
+            })
+
+            objs.border1 = utility:Draw('Square', {
+                Size = newUDim2(1,2,1,2);
+                Position = newUDim2(0,-1,0,-1);
+                ThemeColor = 'Border 2';
+                Parent = objs.background;
+                ZIndex = z-1;
+            })
+
+            objs.border2 = utility:Draw('Square', {
+                Size = newUDim2(1,2,1,2);
+                Position = newUDim2(0,-1,0,-1);
+                ThemeColor = 'Border 3';
+                Parent = objs.border1;
+                ZIndex = z-2;
+            })
+            
+            objs.topbar = utility:Draw('Square', {
+                Size = newUDim2(1,0,0,1);
+                ThemeColor = 'Accent';
+                ZIndex = z+1;
+                Parent = objs.background;
+            })
+
+            objs.text = utility:Draw('Text', {
+                Position = newUDim2(.5,0,0,2);
+                ThemeColor = 'Primary Text';
+                Text = 'Astfolo';
+                Size = 13;
+                Font = 2;
+                ZIndex = z+1;
+                Outline = true;
+                Center = true;
+                Parent = objs.background;
+            })
+
+        end
+    end
+
+    local lasttick = tick();
+    utility:Connection(runservice.RenderStepped, function(step)
+        library.stats.fps = floor(1/step)
+        library.stats.ping = stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+        library.stats.sendkbps = stats.DataSendKbps
+        library.stats.receivekbps = stats.DataReceiveKbps
+
+        if (tick()-lasttick)*1000 > library.watermark.refreshrate then
+            lasttick = tick()
+            library.watermark:Update()
+        end
+    end)
 
     self.keyIndicator = self.NewIndicator({title = 'Keybinds', pos = newUDim2(0,15,0,325), enabled = true});
-
+    
     self.targetIndicator = self.NewIndicator({title = 'Target Info', pos = newUDim2(0,15,0,350), enabled = false});
     self.targetName = self.targetIndicator:AddValue({key = 'Name     :', value = 'nil'})
     self.targetDisplay = self.targetIndicator:AddValue({key = 'DName    :', value = 'nil'})
     self.targetHealth = self.targetIndicator:AddValue({key = 'Health   :', value = '0'})
     self.targetDistance = self.targetIndicator:AddValue({key = 'Distance :', value = '0m'})
     self.targetTool = self.targetIndicator:AddValue({key = 'Weapon   :', value = 'nil'})
-    
-    self:SetTheme(library.theme)
-    self:SetOpen(true)
+
+    self:SetTheme(library.theme);
+    self:SetOpen(true);
     self.hasInit = true
 
 end
@@ -4609,13 +4739,13 @@ function library:CreateSettingsTab(menu)
 
     refreshConfigs()
 
-    mainSection:AddBind({text = 'Open / Close', flag = 'togglebind', nomouse = true, noindicator = true, bind = Enum.KeyCode.LeftAlt, callback = function()
+    mainSection:AddBind({text = 'Open / Close', flag = 'togglebind', nomouse = true, noindicator = true, bind = Enum.KeyCode.End, callback = function()
         library:SetOpen(not library.open)
     end});
 
     mainSection:AddButton({text = 'Join Discord', flag = 'joindiscord', confirm = true, callback = function()
         local res = syn.request({
-            Url = 'https://discord.gg/roblox',
+            Url = 'https://discord.gg/rkRW5VrbWu',
             Method = 'POST',
             Headers = {
                 ['Content-Type'] = 'application/json',
@@ -4624,7 +4754,7 @@ function library:CreateSettingsTab(menu)
             Body = game:GetService('HttpService'):JSONEncode({
                 cmd = 'INVITE_BROWSER',
                 nonce = game:GetService('HttpService'):GenerateGUID(false),
-                args = {code = 'roblox'}
+                args = {code = 'rkRW5VrbWu'}
             })
         })
         if res.Success then
@@ -4653,10 +4783,17 @@ function library:CreateSettingsTab(menu)
            end
        end})
 
+    mainSection:AddSeparator({text = 'Indicators'});
+
+    mainSection:AddToggle({text = 'Watermark', flag = 'watermark_enabled', state = true,});
+
+    mainSection:AddSlider({text = 'Custom X', flag = 'watermark_x', suffix = '%', min = 0, max = 100, increment = .1, value = 6});
+    mainSection:AddSlider({text = 'Custom Y', flag = 'watermark_y', suffix = '%', min = 0, max = 100, increment = .1, value = 1});
+
     mainSection:AddToggle({text = 'Keybinds', flag = 'keybind_indicator', state = true, callback = function(bool)
         library.keyIndicator:SetEnabled(bool);
     end})
-    mainSection:AddSlider({text = 'Position X', flag = 'keybind_indicator_x', min = 0, max = 100, increment = .1, value = 0.5, callback = function()
+    mainSection:AddSlider({text = 'Position X', flag = 'keybind_indicator_x', min = 0, max = 100, increment = .1, value = .5, callback = function()
         library.keyIndicator:SetPosition(newUDim2(library.flags.keybind_indicator_x / 100, 0, library.flags.keybind_indicator_y / 100, 0));    
     end});
     mainSection:AddSlider({text = 'Position Y', flag = 'keybind_indicator_y', min = 0, max = 100, increment = .1, value = 30, callback = function()
